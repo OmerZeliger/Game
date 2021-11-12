@@ -4,6 +4,11 @@ using UnityEngine;
 
 public class MovementController : MonoBehaviour
 {
+    public Rigidbody2D rb;
+
+    //double maxFallSpeed = -1;
+    float jumpSpeed = 15;
+
     // Awake is called before start, when script is being loaded
     void Awake()
     {
@@ -18,6 +23,18 @@ public class MovementController : MonoBehaviour
 
     // Update is called once per frame
     void Update()
+    {
+        // read the user inputs
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            rb.velocity = new Vector2(rb.velocity.x, jumpSpeed);
+        }
+
+        // update the game state
+    }
+
+    // called at a specific rate. Use this to jump instead of gravity?
+    void FixedUpdate()
     {
         
     }
