@@ -270,7 +270,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rb: {fileID: 504908308}
-  wallDetector: {fileID: 504908307}
+  wallDetector: {fileID: 504908312}
+  sr: {fileID: 504908306}
 --- !u!114 &504908311
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -284,6 +285,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rb: {fileID: 0}
+  mc: {fileID: 0}
 --- !u!61 &504908312
 BoxCollider2D:
   m_ObjectHideFlags: 0

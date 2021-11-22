@@ -5,6 +5,7 @@ using UnityEngine;
 public class MoveManager : MonoBehaviour
 {
     public Rigidbody2D rb;
+    public MovementController mc;
 
     // player movement state
     bool jumping; // is the player y-velocity positive atfer a jump
@@ -12,6 +13,7 @@ public class MoveManager : MonoBehaviour
     bool doubleJumped;
     bool falling;
     bool grounded;
+    HorizontalDirection horzDir = HorizontalDirection.NONE;
 
     // TODO: set the different types of movements after instantiation
 
@@ -71,10 +73,7 @@ public class MoveManager : MonoBehaviour
         }
     }
 
-    class BasicJump : Jump
-    {
-        
-    }
+    class BasicJump : Jump { }
 
     class DoubleJump : Jump
     {
@@ -103,4 +102,38 @@ public class MoveManager : MonoBehaviour
             }
         }
     }
+
+    abstract class Walk
+    {
+        float walkSpeed = 7;
+
+        // set velocity to walk in the correct direction, set the character state to facing that direction
+        public virtual void walk(MoveManager mm, HorizontalDirection dir)
+        {
+            if (!mm.holdingWall)
+            {
+                int d = 0;
+                switch (dir)
+                {
+                    case HorizontalDirection.RIGHT : d = 1; break;
+                    case HorizontalDirection.LEFT : d = -1; break;
+                    case HorizontalDirection.NONE : d = 0; break;
+                        
+                }
+                this.w(mm, d * walkSpeed);
+                if (!mm.horzDir.Equals(dir))
+                {
+                    mm.mc.flip(dir);
+                    mm.horzDir = dir;
+                }
+            }
+        }
+
+        protected void w(MoveManager mm, float vel)
+        {
+            mm.rb.velocity = new Vector2(vel, mm.rb.velocity.y);
+        }
+    }
+
+    class BasicWalk : Walk { }
 }

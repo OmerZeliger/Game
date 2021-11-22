@@ -6,6 +6,7 @@ public class MovementController : MonoBehaviour
 {
     public Rigidbody2D rb;
     public BoxCollider2D wallDetector;
+    public SpriteRenderer sr;
 
     //double maxFallSpeed = -1;
     float jumpSpeed = 15;
@@ -14,6 +15,19 @@ public class MovementController : MonoBehaviour
     int dodgeTime = 0;
     int totalDodgeLength = 5;
     float dodgeSpeed = 15;
+
+    // flip the character horizontally
+    public void flip(HorizontalDirection direction)
+    {
+        int offset = 1;
+        switch (direction)
+        {
+            case HorizontalDirection.RIGHT : sr.flipX = true; offset = 1; break;
+            case HorizontalDirection.LEFT : sr.flipX = false; offset = -1; break;
+            case HorizontalDirection.NONE : sr.flipX = false; offset = -1; break; 
+        }
+        wallDetector.offset = new Vector2(offset * Mathf.Abs(wallDetector.offset.x), wallDetector.offset.y);
+    }
 
     // Awake is called before start, when script is being loaded
     void Awake()
@@ -61,10 +75,12 @@ public class MovementController : MonoBehaviour
             if (Input.GetKey(KeyCode.RightArrow))
             {
                 newVel.x = newVel.x + walkSpeed;
+                flip(HorizontalDirection.RIGHT);
             }
             if (Input.GetKey(KeyCode.LeftArrow))
             {
                 newVel.x = newVel.x - walkSpeed;
+                flip(HorizontalDirection.LEFT);
             }
         }
 
@@ -73,7 +89,7 @@ public class MovementController : MonoBehaviour
         // update the game state
     }
 
-    private void OnTriggerEnter2D(Collider2D collision)
+    void OnTriggerEnter2D(Collider2D collision)
     {
         // TODO: based on the tag, test which trigger was hit. For example, if the tag is "wall", test wallDetector
         Debug.Log("Hit " + collision.tag);
