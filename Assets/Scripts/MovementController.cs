@@ -5,6 +5,7 @@ using UnityEngine;
 public class MovementController : MonoBehaviour
 {
     public Rigidbody2D rb;
+    public BoxCollider2D wallDetector;
 
     //double maxFallSpeed = -1;
     float jumpSpeed = 15;
@@ -70,6 +71,12 @@ public class MovementController : MonoBehaviour
         rb.velocity = newVel;
 
         // update the game state
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        // TODO: based on the tag, test which trigger was hit. For example, if the tag is "wall", test wallDetector
+        Debug.Log("Hit " + collision.tag);
     }
 
     // called at a specific rate. Use this to jump instead of gravity?
