@@ -6,6 +6,7 @@ public class MovementController : MonoBehaviour
 {
     public Rigidbody2D rb;
     public BoxCollider2D wallDetector;
+    public BoxCollider2D groudDetector;
     public SpriteRenderer sr;
 
     //double maxFallSpeed = -1;
@@ -13,8 +14,8 @@ public class MovementController : MonoBehaviour
     float walkSpeed = 7;
     bool dodging = false;
     int dodgeTime = 0;
-    int totalDodgeLength = 5;
-    float dodgeSpeed = 15;
+    int totalDodgeLength = 8;
+    float dodgeSpeed = 12;
 
     // flip the character horizontally
     public void flip(HorizontalDirection direction)
@@ -51,16 +52,9 @@ public class MovementController : MonoBehaviour
             newVel.y = jumpSpeed;
         }
 
-        if (dodgeTime >= totalDodgeLength)
-        {
-            dodging = false;
-            dodgeTime = 0;
-        }
-
         if (dodging)
         {
             newVel.x = dodgeSpeed;
-            dodgeTime += 1;
         }
 
         if (Input.GetKeyDown(KeyCode.A))
@@ -98,6 +92,15 @@ public class MovementController : MonoBehaviour
     // called at a specific rate. Use this to jump instead of gravity?
     void FixedUpdate()
     {
-        
+        if (dodging)
+        {
+            dodgeTime += 1;
+        }
+
+        if (dodgeTime >= totalDodgeLength)
+        {
+            dodging = false;
+            dodgeTime = 0;
+        }
     }
 }

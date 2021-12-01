@@ -135,6 +135,7 @@ GameObject:
   - component: {fileID: 504908308}
   - component: {fileID: 504908307}
   - component: {fileID: 504908312}
+  - component: {fileID: 504908313}
   - component: {fileID: 504908306}
   - component: {fileID: 504908310}
   - component: {fileID: 504908311}
@@ -271,6 +272,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   rb: {fileID: 504908308}
   wallDetector: {fileID: 504908312}
+  groudDetector: {fileID: 504908313}
   sr: {fileID: 504908306}
 --- !u!114 &504908311
 MonoBehaviour:
@@ -284,8 +286,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6887958a42ed6472f86c8729ee612e00, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rb: {fileID: 0}
-  mc: {fileID: 0}
+  rb: {fileID: 504908308}
+  mc: {fileID: 504908310}
 --- !u!61 &504908312
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -311,6 +313,32 @@ BoxCollider2D:
   m_AutoTiling: 0
   serializedVersion: 2
   m_Size: {x: 0.1, y: 0.3}
+  m_EdgeRadius: 0
+--- !u!61 &504908313
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 504908305}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0, y: -0.49}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0.5, y: 0.5}
+    oldSize: {x: 1.3333334, y: 1.3333334}
+    newSize: {x: 20, y: 20}
+    adaptiveTilingThreshold: 0.5
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  serializedVersion: 2
+  m_Size: {x: 0.2, y: 0.1}
   m_EdgeRadius: 0
 --- !u!1 &519420028
 GameObject:
@@ -389,7 +417,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 519420028}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -10}
+  m_LocalPosition: {x: 0, y: 0, z: -7}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -416,7 +444,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3640418372642230961, guid: 0dbed0c7812124ca98a48470056f5291, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 1.7757
+      value: 1.46
       objectReference: {fileID: 0}
     - target: {fileID: 3640418372642230961, guid: 0dbed0c7812124ca98a48470056f5291, type: 3}
       propertyPath: m_LocalPosition.y
