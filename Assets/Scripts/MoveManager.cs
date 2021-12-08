@@ -19,6 +19,12 @@ public class MoveManager : MonoBehaviour
     int dodgeRemaining;
     bool airDodged;
     Vector2 steadyVel; // any velocity that the game needs to maintain for a period of time
+    //float gravity = -0.5;
+
+    // the movement strategies
+    Jump jumper = new BasicJump();
+    Walk walker = new BasicWalk();
+    Dodge dodger = new GroundDodge();
 
     // other useful constants
     private int groundLayer; // TODO: add a public list of useful constants like this
@@ -245,4 +251,6 @@ public class MoveManager : MonoBehaviour
             mm.rb.velocity = new Vector2(d * backwardsDodgeSpeed, 0);
         }
     }
+
+    class GroundDodge : Dodge { }
 }
