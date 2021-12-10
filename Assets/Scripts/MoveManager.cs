@@ -22,12 +22,12 @@ public class MoveManager : MonoBehaviour
     //float gravity = -0.5;
 
     // the movement strategies
-    Jump jumper = new BasicJump();
-    Walk walker = new BasicWalk();
-    Dodge dodger = new GroundDodge();
+    Jump jumper;
+    Walk walker;
+    Dodge dodger;
 
     // other useful constants
-    private int groundLayer = 3; // TODO: add a public list of useful constants like this
+    private int groundLayer; // TODO: add a public list of useful constants like this
 
     // TODO: set the different types of movements after instantiation
 
@@ -52,6 +52,14 @@ public class MoveManager : MonoBehaviour
         dodger.dodge(this, dir);
     }
 
+    void Awake()
+    {
+        groundLayer = LayerMask.GetMask("Ground");
+        jumper = new DoubleJump();
+        walker = new BasicWalk();
+        dodger = new GroundDodge();
+    }
+
     // Start is called before the first frame update
     void Start()
     {
@@ -73,11 +81,13 @@ public class MoveManager : MonoBehaviour
         // check if move queued
         // check if dodging - if dodging, maintain current velocity and decrease dodgeRemaining
 
-        if (pc.groudDetector.IsTouchingLayers(LayerMask.GetMask("Ground")))
+        if (pc.groudDetector.IsTouchingLayers(groundLayer))
         {
             grounded = true;
+            doubleJumped = false;
+            airDodged = false;
         }
-        if (pc.wallDetector.IsTouchingLayers(LayerMask.GetMask("Ground")))
+        if (pc.wallDetector.IsTouchingLayers(groundLayer))
         {
             frontTouchingWall = true;
         }
@@ -128,19 +138,20 @@ public class MoveManager : MonoBehaviour
         }
 
         // begin a jump if appropriate
-        public virtual void jump(MoveManager mm)
+        public abstract void jump(MoveManager mm);
+
+        protected virtual void regularJump(MoveManager mm)
         {
-            if (mm.dodging) { return; } // TODO: queueing
-            if (mm.grounded)
             {
                 jmp(mm.rb);
                 mm.jumping = true;
                 mm.grounded = false;
             }
-            else if (mm.holdingWall)
-            {
-                // TODO: implement special jump for holding onto the wall
-            }
+        }
+
+        protected virtual void wallJump(MoveManager mm)
+        {
+            // TODO: implement
         }
 
         // stop all upwards velocity after a jump
@@ -159,29 +170,43 @@ public class MoveManager : MonoBehaviour
         }
     }
 
-    class BasicJump : Jump { }
+    class BasicJump : Jump
+    {
+        public override void jump(MoveManager mm)
+        {
+            if (mm.dodging || !mm.grounded) { return; } // TODO: queueing
+            if (mm.grounded)
+            {
+                regularJump(mm);
+            }
+            else if (mm.holdingWall)
+            {
+                // TODO: implement special jump for holding onto the wall
+            }
+        }
+    }
 
     class DoubleJump : Jump
     {
         Jump groundedJump;
-        // TODO: add an air jump instead of manually doing it. That'll also take care of queueing.
         // TODO: return a bool for queueing purposes
 
-        DoubleJump()
+        public DoubleJump()
         {
-            new DoubleJump(new BasicJump());
+            groundedJump = new BasicJump();
+            // TODO: why can't I call the other constructor without groundedJump being null?
         }
 
-        DoubleJump(Jump groundedJump)
+        public DoubleJump(Jump gj)
         {
-            this.groundedJump = groundedJump;
+            groundedJump = gj;
         }
 
         public override void jump(MoveManager mm)
         {
             if (!mm.grounded && !mm.doubleJumped)
             {
-                jmp(mm.rb);
+                regularJump(mm);
                 mm.doubleJumped = true;
             }
             else
@@ -193,28 +218,30 @@ public class MoveManager : MonoBehaviour
 
     abstract class Walk
     {
-        float walkSpeed = 7;
-
-        // set velocity to walk in the correct direction, set the character state to facing that direction
-        public virtual void walk(MoveManager mm, Direction dir)
+        protected virtual float walkSpeed
         {
-            if (!mm.holdingWall && !mm.dodging)
+            get { return 7; }
+        }
+
+        protected void alwaysWalk(MoveManager mm, Direction dir)
+        {
+            int d = 0;
+            switch (dir)
             {
-                int d = 0;
-                switch (dir)
-                {
-                    case Direction.RIGHT : d = 1; break;
-                    case Direction.LEFT : d = -1; break;
-                    case Direction.NONE : d = 0; break;
-                }
-                this.w(mm, d);
-                if (!mm.horzDir.Equals(dir) && dir != Direction.NONE)
-                {
-                    mm.pc.flip(dir);
-                    mm.horzDir = dir;
-                }
+                case Direction.RIGHT: d = 1; break;
+                case Direction.LEFT: d = -1; break;
+                case Direction.NONE: d = 0; break;
+            }
+            this.w(mm, d);
+            if (!mm.horzDir.Equals(dir) && dir != Direction.NONE)
+            {
+                mm.pc.flip(dir);
+                mm.horzDir = dir;
             }
         }
+
+        // set velocity to walk in the correct direction, set the character state to facing that direction
+        public abstract void walk(MoveManager mm, Direction dir);
 
         protected void w(MoveManager mm, int dir)
         {
@@ -222,32 +249,53 @@ public class MoveManager : MonoBehaviour
         }
     }
 
-    class BasicWalk : Walk { }
+    class BasicWalk : Walk
+    {
+        public override void walk(MoveManager mm, Direction dir)
+        {
+            if (!mm.holdingWall && !mm.dodging)
+            {
+                alwaysWalk(mm, dir);
+            }
+        }
+    }
 
     abstract class Dodge
     {
-        float forwardDodgeSpeed = 12;
-        float backwardsDodgeSpeed = 10;
-        int forwardsDodgeLength = 8;
-        int backwardsDodgeLength = 5;
+        protected virtual int forwardDodgeSpeed
+        {
+            get { return 12; }
+        }
+        protected virtual int backwardsDodgeSpeed
+        {
+            get { return 10; }
+        }
+        protected virtual int forwardsDodgeLength
+        {
+            get { return 8; }
+        }
+        protected virtual int backwardsDodgeLength
+        {
+            get { return 5; }
+        }
 
         // dodge in the given direction if appropriate
-        public virtual void dodge(MoveManager mm, Direction dir)
+        public abstract void dodge(MoveManager mm, Direction dir);
+
+        // dodge in the given direction
+        protected void alwaysDodge(MoveManager mm, Direction dir)
         {
-            if (mm.grounded && !mm.dodging && dir != Direction.NONE)
+            if (dir.Equals(mm.horzDir))
             {
-                if (dir.Equals(mm.horzDir))
-                {
-                    forwardDodge(mm);
-                    mm.dodgeRemaining = forwardsDodgeLength;
-                } else
-                {
-                    backwardsDodge(mm);
-                    mm.dodgeRemaining = backwardsDodgeLength;
-                }
-                mm.dodging = true;
-                mm.steadyVel = mm.rb.velocity;
+                forwardDodge(mm);
+                mm.dodgeRemaining = forwardsDodgeLength;
+            } else
+            {
+                backwardsDodge(mm);
+                mm.dodgeRemaining = backwardsDodgeLength;
             }
+            mm.dodging = true;
+            mm.steadyVel = mm.rb.velocity;
         }
 
         // dodge in the direction the character is facing
@@ -277,5 +325,14 @@ public class MoveManager : MonoBehaviour
         }
     }
 
-    class GroundDodge : Dodge { }
+    class GroundDodge : Dodge
+    {
+        public override void dodge(MoveManager mm, Direction dir)
+        {
+            if (mm.grounded && !mm.dodging && dir != Direction.NONE)
+            {
+                alwaysDodge(mm, dir);
+            }
+        }
+    }
 }
