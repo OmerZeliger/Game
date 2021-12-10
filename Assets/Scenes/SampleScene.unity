@@ -268,13 +268,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 504908305}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 593b1f08df357411884d2e65a88a1d93, type: 3}
+  m_Script: {fileID: 11500000, guid: 9000e314abb5d4a7196845af46f63f8c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   rb: {fileID: 504908308}
   wallDetector: {fileID: 504908312}
   groudDetector: {fileID: 504908313}
   sr: {fileID: 504908306}
+  mm: {fileID: 504908311}
 --- !u!114 &504908311
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -288,7 +289,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rb: {fileID: 504908308}
-  mc: {fileID: 504908310}
+  pc: {fileID: 504908310}
 --- !u!61 &504908312
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -475,11 +476,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3640418372642230961, guid: 0dbed0c7812124ca98a48470056f5291, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 1.46
+      value: 1.74
       objectReference: {fileID: 0}
     - target: {fileID: 3640418372642230961, guid: 0dbed0c7812124ca98a48470056f5291, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.8754
+      value: 1.9
       objectReference: {fileID: 0}
     - target: {fileID: 3640418372642230961, guid: 0dbed0c7812124ca98a48470056f5291, type: 3}
       propertyPath: m_LocalPosition.z
@@ -577,6 +578,10 @@ PrefabInstance:
     - target: {fileID: 3640418372642230965, guid: 0dbed0c7812124ca98a48470056f5291, type: 3}
       propertyPath: m_Name
       value: Wall (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 3640418372642230965, guid: 0dbed0c7812124ca98a48470056f5291, type: 3}
+      propertyPath: m_Layer
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 3640418372642230965, guid: 0dbed0c7812124ca98a48470056f5291, type: 3}
       propertyPath: m_TagString

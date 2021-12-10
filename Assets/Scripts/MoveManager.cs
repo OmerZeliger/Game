@@ -5,7 +5,7 @@ using UnityEngine;
 public class MoveManager : MonoBehaviour
 {
     public Rigidbody2D rb;
-    public MovementController mc;
+    public PlayerController pc;
 
     // player movement state
     bool jumping; // is the player y-velocity positive after a jump
@@ -14,7 +14,7 @@ public class MoveManager : MonoBehaviour
     bool doubleJumped;
     bool falling;
     bool grounded;
-    HorizontalDirection horzDir = HorizontalDirection.NONE;
+    Direction horzDir = Direction.LEFT;
     bool dodging;
     int dodgeRemaining;
     bool airDodged;
@@ -27,9 +27,30 @@ public class MoveManager : MonoBehaviour
     Dodge dodger = new GroundDodge();
 
     // other useful constants
-    private int groundLayer; // TODO: add a public list of useful constants like this
+    private int groundLayer = 3; // TODO: add a public list of useful constants like this
 
     // TODO: set the different types of movements after instantiation
+
+    // public methods for movement
+    public void jump()
+    {
+        jumper.jump(this);
+    }
+
+    public void stopJump()
+    {
+        jumper.stopJump(this);
+    }
+
+    public void walk(Direction dir)
+    {
+        walker.walk(this, dir);
+    }
+
+    public void dodge(Direction dir)
+    {
+        dodger.dodge(this, dir);
+    }
 
     // Start is called before the first frame update
     void Start()
@@ -52,6 +73,15 @@ public class MoveManager : MonoBehaviour
         // check if move queued
         // check if dodging - if dodging, maintain current velocity and decrease dodgeRemaining
 
+        if (pc.groudDetector.IsTouchingLayers(LayerMask.GetMask("Ground")))
+        {
+            grounded = true;
+        }
+        if (pc.wallDetector.IsTouchingLayers(LayerMask.GetMask("Ground")))
+        {
+            frontTouchingWall = true;
+        }
+
         falling = rb.velocity.y < 0;
         jumping = jumping && !falling;
 
@@ -62,6 +92,7 @@ public class MoveManager : MonoBehaviour
             if (dodgeRemaining <= 0)
             {
                 dodging = false;
+                rb.velocity = new Vector2(0, 0);
             }
         }
     }
@@ -70,13 +101,7 @@ public class MoveManager : MonoBehaviour
     {
         if (other.CompareTag("Wall"))
         {
-            if (mc.groudDetector.IsTouchingLayers(groundLayer)) {
-                grounded = true;
-            }
-            if (mc.wallDetector.IsTouchingLayers(groundLayer))
-            {
-                frontTouchingWall = true;
-            }
+            
         }
     }
 
@@ -84,11 +109,11 @@ public class MoveManager : MonoBehaviour
     {
         if (other.CompareTag("Wall"))
         {
-            if (!mc.groudDetector.IsTouchingLayers(groundLayer))
+            if (!pc.groudDetector.IsTouchingLayers(groundLayer))
             {
                 grounded = false;
             }
-            if (!mc.wallDetector.IsTouchingLayers(groundLayer))
+            if (!pc.wallDetector.IsTouchingLayers(groundLayer))
             {
                 frontTouchingWall = false;
             }
@@ -97,7 +122,10 @@ public class MoveManager : MonoBehaviour
 
     abstract class Jump
     {
-        protected float jumpSpeed = 15;
+        protected virtual float jumpSpeed
+        {
+            get { return 15; }
+        }
 
         // begin a jump if appropriate
         public virtual void jump(MoveManager mm)
@@ -168,22 +196,21 @@ public class MoveManager : MonoBehaviour
         float walkSpeed = 7;
 
         // set velocity to walk in the correct direction, set the character state to facing that direction
-        public virtual void walk(MoveManager mm, HorizontalDirection dir)
+        public virtual void walk(MoveManager mm, Direction dir)
         {
             if (!mm.holdingWall && !mm.dodging)
             {
                 int d = 0;
                 switch (dir)
                 {
-                    case HorizontalDirection.RIGHT : d = 1; break;
-                    case HorizontalDirection.LEFT : d = -1; break;
-                    case HorizontalDirection.NONE : d = 0; break;
-                        
+                    case Direction.RIGHT : d = 1; break;
+                    case Direction.LEFT : d = -1; break;
+                    case Direction.NONE : d = 0; break;
                 }
                 this.w(mm, d);
-                if (!mm.horzDir.Equals(dir))
+                if (!mm.horzDir.Equals(dir) && dir != Direction.NONE)
                 {
-                    mm.mc.flip(dir);
+                    mm.pc.flip(dir);
                     mm.horzDir = dir;
                 }
             }
@@ -205,9 +232,9 @@ public class MoveManager : MonoBehaviour
         int backwardsDodgeLength = 5;
 
         // dodge in the given direction if appropriate
-        public virtual void dodge(MoveManager mm, HorizontalDirection dir)
+        public virtual void dodge(MoveManager mm, Direction dir)
         {
-            if (mm.grounded && !mm.dodging)
+            if (mm.grounded && !mm.dodging && dir != Direction.NONE)
             {
                 if (dir.Equals(mm.horzDir))
                 {
@@ -229,9 +256,8 @@ public class MoveManager : MonoBehaviour
             int d = 0;
             switch (mm.horzDir)
             {
-                case HorizontalDirection.RIGHT: d = 1; break;
-                case HorizontalDirection.LEFT: d = -1; break;
-                case HorizontalDirection.NONE: d = 0; break;
+                case Direction.RIGHT: d = 1; break;
+                case Direction.LEFT: d = -1; break;
 
             }
             mm.rb.velocity = new Vector2(d * forwardDodgeSpeed, 0);
@@ -243,9 +269,8 @@ public class MoveManager : MonoBehaviour
             int d = 0;
             switch (mm.horzDir)
             {
-                case HorizontalDirection.RIGHT: d = 1; break;
-                case HorizontalDirection.LEFT: d = -1; break;
-                case HorizontalDirection.NONE: d = 0; break;
+                case Direction.RIGHT: d = -1; break;
+                case Direction.LEFT: d = 1; break;
 
             }
             mm.rb.velocity = new Vector2(d * backwardsDodgeSpeed, 0);

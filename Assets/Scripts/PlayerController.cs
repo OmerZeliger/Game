@@ -1,13 +1,17 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
-public class MovementController : MonoBehaviour
+public class PlayerController : MonoBehaviour
 {
     public Rigidbody2D rb;
     public BoxCollider2D wallDetector;
     public BoxCollider2D groudDetector;
     public SpriteRenderer sr;
+    public MoveManager mm;
+
+    private Game inputs;
 
     //double maxFallSpeed = -1;
     float jumpSpeed = 15;
@@ -18,14 +22,14 @@ public class MovementController : MonoBehaviour
     float dodgeSpeed = 12;
 
     // flip the character horizontally
-    public void flip(HorizontalDirection direction)
+    public void flip(Direction direction)
     {
-        int offset = 1;
+        int offset = -1;
         switch (direction)
         {
-            case HorizontalDirection.RIGHT : sr.flipX = true; offset = 1; break;
-            case HorizontalDirection.LEFT : sr.flipX = false; offset = -1; break;
-            case HorizontalDirection.NONE : sr.flipX = false; offset = -1; break; 
+            case Direction.RIGHT : sr.flipX = true; offset = 1; break;
+            case Direction.LEFT : sr.flipX = false; offset = -1; break;
+            case Direction.NONE : return;
         }
         wallDetector.offset = new Vector2(offset * Mathf.Abs(wallDetector.offset.x), wallDetector.offset.y);
     }
@@ -33,7 +37,17 @@ public class MovementController : MonoBehaviour
     // Awake is called before start, when script is being loaded
     void Awake()
     {
-        
+        inputs = new Game();
+    }
+
+    void OnEnable()
+    {
+        inputs.Enable();
+    }
+
+    void OnDisable()
+    {
+        inputs.Disable();
     }
 
     // Start is called before the first frame update
@@ -42,43 +56,46 @@ public class MovementController : MonoBehaviour
         
     }
 
+
     // Update is called once per frame
     void Update()
     {
         // read the user inputs
-        Vector2 newVel = new Vector2(0,rb.velocity.y);
-        if (Input.GetKeyDown(KeyCode.Space))
+
+        if (inputs.Player.Jump.triggered)
         {
-            newVel.y = jumpSpeed;
+            mm.jump();
         }
 
-        if (dodging)
+        if (inputs.Player.StopJump.triggered)
         {
-            newVel.x = dodgeSpeed;
+            mm.stopJump();
         }
 
-        if (Input.GetKeyDown(KeyCode.A))
+        if (inputs.Player.Dodge.triggered)
         {
-            newVel.x = dodgeSpeed;
-            dodging = true;
-            dodgeTime += 1;
-        }
-
-        if (!dodging)
-        {
-            if (Input.GetKey(KeyCode.RightArrow))
-            {
-                newVel.x = newVel.x + walkSpeed;
-                flip(HorizontalDirection.RIGHT);
+            float d = inputs.Player.Dodge.ReadValue<float>();
+            Direction dir = Direction.NONE;
+            switch (d) {
+                case -1 : dir = Direction.LEFT; break;
+                case 1 : dir = Direction.RIGHT; break;
             }
-            if (Input.GetKey(KeyCode.LeftArrow))
-            {
-                newVel.x = newVel.x - walkSpeed;
-                flip(HorizontalDirection.LEFT);
-            }
+            mm.dodge(dir);
         }
 
-        rb.velocity = newVel;
+        if (inputs.Player.Move.phase != InputActionPhase.Waiting || inputs.Player.Move.triggered)
+        {
+            int d = Mathf.RoundToInt(inputs.Player.Move.ReadValue<float>());
+            Direction dir = Direction.NONE;
+            switch (d)
+            {
+                case -1: dir = Direction.LEFT; break;
+                case 1: dir = Direction.RIGHT; break;
+            }
+            mm.walk(dir);
+        }
+
+
 
         // update the game state
     }
