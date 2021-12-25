@@ -102,7 +102,8 @@ public class MoveManager : MonoBehaviour
             if (dodgeRemaining <= 0)
             {
                 dodging = false;
-                rb.velocity = new Vector2(0, 0);
+                //rb.velocity = new Vector2(0, 0);
+                // don't need this as long as walk gets called at every update
             }
         }
     }
@@ -128,6 +129,11 @@ public class MoveManager : MonoBehaviour
                 frontTouchingWall = false;
             }
         }
+    }
+
+    public Direction horizontalDirection
+    {
+        get { return horzDir; }
     }
 
     abstract class Jump

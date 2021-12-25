@@ -10,16 +10,9 @@ public class PlayerController : MonoBehaviour
     public BoxCollider2D groudDetector;
     public SpriteRenderer sr;
     public MoveManager mm;
+    public GameObject respawn;
 
     private Game inputs;
-
-    //double maxFallSpeed = -1;
-    float jumpSpeed = 15;
-    float walkSpeed = 7;
-    bool dodging = false;
-    int dodgeTime = 0;
-    int totalDodgeLength = 8;
-    float dodgeSpeed = 12;
 
     // flip the character horizontally
     public void flip(Direction direction)
@@ -83,7 +76,9 @@ public class PlayerController : MonoBehaviour
             mm.dodge(dir);
         }
 
-        if (inputs.Player.Move.phase != InputActionPhase.Waiting || inputs.Player.Move.triggered)
+        if (true) //(inputs.Player.Move.phase != InputActionPhase.Waiting || inputs.Player.Move.triggered)
+            // TODO: for some reason the player's rounded box collider will slide backwards slowly after contacting a wall
+            // leave it this way until I figure out why and how to stop it lol
         {
             int d = Mathf.RoundToInt(inputs.Player.Move.ReadValue<float>());
             Direction dir = Direction.NONE;
@@ -109,15 +104,9 @@ public class PlayerController : MonoBehaviour
     // called at a specific rate. Use this to jump instead of gravity?
     void FixedUpdate()
     {
-        if (dodging)
+        if (transform.position.y < -10)
         {
-            dodgeTime += 1;
-        }
-
-        if (dodgeTime >= totalDodgeLength)
-        {
-            dodging = false;
-            dodgeTime = 0;
+            transform.position = respawn.transform.position;
         }
     }
 }
