@@ -35,4 +35,17 @@ public class FlappyEnemyController : MonoBehaviour
     {
         rb.velocity = new Vector2(rb.velocity.x, 4);
     }
+
+    void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.CompareTag("SplashDamage"))
+        {
+            die();
+        }
+    }
+
+    public void die()
+    {
+        Destroy(gameObject);
+    }
 }

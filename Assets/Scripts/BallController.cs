@@ -8,13 +8,18 @@ public class BallController : MonoBehaviour
     float rotationDistance = 0.7f;
     float attackDistance = 1;
     float followSpeed = 3;
+    int attackLength = 8;
 
+    // stuff that changes
+    bool attacking = false;
+    int attackRemaining = 0;
+    Vector2 steadyLoc;
+
+    // references to other game stuff
     public MoveManager mm;
     public Rigidbody2D rb;
+    public AttackSplashController splashDamage;
     private Game inputs;
-
-    // TODO: make the ball lag behind a little when the player walks by adding a rotating empty game object,
-    // saving its location for a couple fixedUpdates, and moving the ball there after a delay
 
     // Start is called before the first frame update
     void Start()
@@ -48,20 +53,38 @@ public class BallController : MonoBehaviour
 
     void FixedUpdate()
     {
-        transform.RotateAround(transform.parent.position, Vector3.forward, 1.8f);
-        if (Mathf.Abs(transform.localPosition.magnitude - rotationDistance) > 0.01)
+        if (attacking)
         {
-            Vector2 scaled = transform.localPosition.normalized;
-            scaled.Scale(new Vector2(rotationDistance, rotationDistance));
-            Vector2 newVel = Utils.subtract(transform.localPosition, scaled);
-            newVel.Scale(new Vector2(-followSpeed, -followSpeed));
-            rb.velocity = newVel;
+            attackRemaining -= 1;
+            transform.localPosition = steadyLoc;
+            if (attackRemaining <= 0) {
+                attacking = false;
+                splashDamage.deactivate();
+            }
         }
+        else
+        {
+            transform.RotateAround(transform.parent.position, Vector3.forward, 1.8f);
+            if (Mathf.Abs(transform.localPosition.magnitude - rotationDistance) > 0.01)
+            {
+                Vector2 scaled = transform.localPosition.normalized;
+                scaled.Scale(new Vector2(rotationDistance, rotationDistance));
+                Vector2 newVel = Utils.subtract(transform.localPosition, scaled);
+                newVel.Scale(new Vector2(-followSpeed, -followSpeed));
+                rb.velocity = newVel;
+            }
+        }
+        
     }
 
     // attack lol
     void attack()
     {
+        if (attacking)
+        {
+            // TODO: queue attack
+            return;
+        }
         Direction attackDir = Utils.intToVertDir(Mathf.RoundToInt(inputs.Player.Look.ReadValue<float>()));
         if (attackDir == Direction.NONE)
         {
@@ -72,5 +95,10 @@ public class BallController : MonoBehaviour
         attackLoc.Scale(new Vector2(attackDistance, attackDistance));
 
         transform.localPosition = attackLoc;
+        steadyLoc = attackLoc;
+        attacking = true;
+        attackRemaining = attackLength;
+
+        splashDamage.activate();
     }
 }
