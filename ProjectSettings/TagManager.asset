@@ -7,6 +7,7 @@ TagManager:
   - Wall
   - Ball
   - Enemy
+  - SplashDamage
   layers:
   - Default
   - TransparentFX
@@ -41,6 +42,9 @@ TagManager:
   - 
   - 
   m_SortingLayers:
+  - name: Terrain
+    uniqueID: 154439377
+    locked: 0
   - name: Default
     uniqueID: 0
     locked: 0

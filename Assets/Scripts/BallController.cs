@@ -1,5 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
+using System;
+using System.Linq;
 using UnityEngine;
 
 public class BallController : MonoBehaviour
@@ -19,6 +21,9 @@ public class BallController : MonoBehaviour
     public MoveManager mm;
     public Rigidbody2D rb;
     public AttackSplashController splashDamage;
+    public TrailRenderer tr;
+    public LineRenderer lr;
+    public BezierController bezier;
     private Game inputs;
 
     // Start is called before the first frame update
@@ -49,6 +54,8 @@ public class BallController : MonoBehaviour
         {
             attack();
         }
+
+
     }
 
     void FixedUpdate()
@@ -74,7 +81,11 @@ public class BallController : MonoBehaviour
                 rb.velocity = newVel;
             }
         }
-        
+
+        if (lr.enabled)
+        {
+            maintainTrailAfterJump();
+        }
     }
 
     // attack lol
@@ -94,11 +105,67 @@ public class BallController : MonoBehaviour
         Vector2 attackLoc = Utils.dirToVector(attackDir).normalized;
         attackLoc.Scale(new Vector2(attackDistance, attackDistance));
 
-        transform.localPosition = attackLoc;
+
+
+        //transform.localPosition = attackLoc;
+        jumpTo(attackLoc, Vector2.zero);
         steadyLoc = attackLoc;
         attacking = true;
         attackRemaining = attackLength;
 
         splashDamage.activate();
+    }
+
+    // move the ball to the new position and give it a pretty trail
+    // both given locations should be in local coordinates
+    private void jumpTo(Vector2 newPosition, Vector2 approachDirection)
+    {
+        tr.AddPositions(bezier.trail(transform.position,
+            Utils.sum(transform.position,
+                Utils.scale(Utils.subtract(transform.position,tr.GetPosition(tr.positionCount-2)), 8)),
+            Utils.sum(transform.parent.position, approachDirection),
+            Utils.sum(transform.parent.position, newPosition)));
+        Vector3[] positions = new Vector3[tr.positionCount];
+        tr.GetPositions(positions);
+        lr.enabled = true;
+        Vector3[] lrPositions = new Vector3[lr.positionCount];
+        lr.GetPositions(lrPositions);
+        lrPositions = lrPositions.Concat(positions).ToArray();
+        lr.positionCount = lrPositions.Length;
+        lr.SetPositions(lrPositions);
+
+        transform.localPosition = newPosition;
+        tr.Clear();
+    }
+
+    private void maintainTrailAfterJump()
+    {
+        //return;
+        if (lr.positionCount < 3) //|| lr.positionCount < tr.positionCount)
+        {
+            lr.positionCount = 0;
+            lr.enabled = false;
+            //Debug.Log("disabled");
+            return;
+        }
+        
+        // add the latest point
+
+        lr.positionCount = lr.positionCount + 1;
+        lr.SetPosition(lr.positionCount - 1, new Vector3(transform.position.x, transform.position.y, 0));
+
+        // remove the last couple points
+        int trailLength = lr.positionCount;
+        int deleteNum = Mathf.RoundToInt(Mathf.Max(4, trailLength / 10));
+        //int deleteNum = 1;
+        Vector3[] lrPositions = new Vector3[lr.positionCount];
+        lr.GetPositions(lrPositions);
+        //Array.Reverse(lrPositions);
+        Vector3[] newPositions = new Vector3[lr.positionCount - deleteNum];
+        //lrPositions.CopyTo(newPositions, deleteNum);
+        Array.ConstrainedCopy(lrPositions, deleteNum, newPositions, 0, newPositions.Length);
+        lr.positionCount = trailLength - deleteNum;
+        //Array.Reverse(newPositions);
+        lr.SetPositions(newPositions);
     }
 }

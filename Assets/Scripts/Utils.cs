@@ -44,4 +44,14 @@ public class Utils
     {
         return new Vector2(first.x - second.x, first.y - second.y);
     }
+
+    public static Vector2 sum(Vector2 first, Vector2 second)
+    {
+        return new Vector2(first.x + second.x, first.y + second.y);
+    }
+
+    public static Vector2 scale(Vector2 v, float scaleFactor)
+    {
+        return new Vector2(v.x * scaleFactor, v.y * scaleFactor);
+    }
 }
