@@ -29,7 +29,7 @@ public class BallController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+
     }
 
     void Awake()
@@ -136,21 +136,43 @@ public class BallController : MonoBehaviour
 
         transform.localPosition = newPosition;
         tr.Clear();
+        tr.forceRenderingOff = true;
     }
 
     private void maintainTrailAfterJump()
     {
         //return;
-        if (lr.positionCount < 3) //|| lr.positionCount < tr.positionCount)
+        int approxTrPositions = Mathf.FloorToInt(tr.time / Time.fixedDeltaTime);
+        if (lr.positionCount <= approxTrPositions) //|| lr.positionCount < tr.positionCount)
         {
-            lr.positionCount = 0;
-            lr.enabled = false;
-            //Debug.Log("disabled");
-            return;
+            if (tr.positionCount < lr.positionCount)
+            {
+                Debug.Log("lr longer than tr " + tr.positionCount + " " + lr.positionCount);
+            }
+            else // lr shorter or equal to tr
+            {
+                Vector3[] lrPositionsB = new Vector3[lr.positionCount];
+                lr.GetPositions(lrPositionsB);
+                Vector3[] trPositionsB = new Vector3[tr.positionCount];
+                Array.ConstrainedCopy(lrPositionsB, 0, trPositionsB,
+                    trPositionsB.Length - lrPositionsB.Length, lrPositionsB.Length);
+                for (int i = 0; i <= trPositionsB.Length - lrPositionsB.Length + 1; i++)
+                {
+                    trPositionsB[i] =
+                        Vector3.Lerp(lrPositionsB[0], lrPositionsB[Mathf.Min(1, lrPositionsB.Length)],
+                        (float)i / (trPositionsB.Length - lrPositionsB.Length + 1));
+                }
+                tr.SetPositions(trPositionsB);
+                tr.forceRenderingOff = false;
+
+                lr.positionCount = 0;
+                lr.enabled = false;
+                //Debug.Log("disabled");
+                return;
+            }
         }
         
         // add the latest point
-
         lr.positionCount = lr.positionCount + 1;
         lr.SetPosition(lr.positionCount - 1, new Vector3(transform.position.x, transform.position.y, 0));
 
