@@ -7,6 +7,10 @@ public class MoveManager : MonoBehaviour
     public Rigidbody2D rb;
     public PlayerController pc;
 
+    // constants
+    int queueLength = 10; // TODO: find a more elegant solution than having a bunch of repeated code?
+    // TODO: change the queue length based on the framerate. Or just use delta time lol
+
     // player movement state
     bool jumping; // is the player y-velocity positive after a jump
     bool frontTouchingWall;
@@ -21,6 +25,11 @@ public class MoveManager : MonoBehaviour
     Vector2 steadyVel; // any velocity that the game needs to maintain for a period of time
     //float gravity = -0.5;
 
+    // queue
+    int jumpQueue = 0;
+    int dodgeQueue = 0;
+    Direction dodgeQueueDirection;
+
     // the movement strategies
     Jump jumper;
     Walk walker;
@@ -34,7 +43,10 @@ public class MoveManager : MonoBehaviour
     // public methods for movement
     public void jump()
     {
-        jumper.jump(this);
+        if (!jumper.jump(this))
+        {
+            jumpQueue = queueLength;
+        }
     }
 
     public void stopJump()
@@ -49,13 +61,17 @@ public class MoveManager : MonoBehaviour
 
     public void dodge(Direction dir)
     {
-        dodger.dodge(this, dir);
+        if (!dodger.dodge(this, dir))
+        {
+            dodgeQueue = queueLength;
+            dodgeQueueDirection = dir;
+        }
     }
 
     void Awake()
     {
         groundLayer = LayerMask.GetMask("Ground");
-        jumper = new DoubleJump();
+        jumper = new BasicJump();
         walker = new BasicWalk();
         dodger = new GroundDodge();
     }
@@ -69,7 +85,23 @@ public class MoveManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        // take care of queued actions
+        if (jumpQueue > 0)
+        {
+            jumpQueue -= 1;
+            if (jumper.jump(this))
+            {
+                jumpQueue = 0;
+            }
+        }
+        if (dodgeQueue > 0)
+        {
+            dodgeQueue -= 1;
+            if (dodger.dodge(this, dodgeQueueDirection))
+            {
+                dodgeQueue = 0;
+            }
+        }
     }
 
     void FixedUpdate()
@@ -81,20 +113,24 @@ public class MoveManager : MonoBehaviour
         // check if move queued
         // check if dodging - if dodging, maintain current velocity and decrease dodgeRemaining
 
+        // check if grounded
         if (pc.groudDetector.IsTouchingLayers(groundLayer))
         {
             grounded = true;
             doubleJumped = false;
             airDodged = false;
         }
+        // check if the front of the player is touching a wall
         if (pc.wallDetector.IsTouchingLayers(groundLayer))
         {
             frontTouchingWall = true;
         }
 
+        // check if player is falling/jumping
         falling = rb.velocity.y < 0;
         jumping = jumping && !falling;
 
+        // maintain a dodge
         if (dodging)
         {
             rb.velocity = steadyVel;
@@ -136,6 +172,12 @@ public class MoveManager : MonoBehaviour
         get { return horzDir; }
     }
 
+    void clearQueue()
+    {
+        dodgeQueue = 0;
+        jumpQueue = 0;
+    }
+
     abstract class Jump
     {
         protected virtual float jumpSpeed
@@ -144,7 +186,7 @@ public class MoveManager : MonoBehaviour
         }
 
         // begin a jump if appropriate
-        public abstract void jump(MoveManager mm);
+        public abstract bool jump(MoveManager mm);
 
         protected virtual void regularJump(MoveManager mm)
         {
@@ -178,9 +220,9 @@ public class MoveManager : MonoBehaviour
 
     class BasicJump : Jump
     {
-        public override void jump(MoveManager mm)
+        public override bool jump(MoveManager mm)
         {
-            if (mm.dodging || !mm.grounded) { return; } // TODO: queueing
+            if (mm.dodging || !mm.grounded) { return false; }
             if (mm.grounded)
             {
                 regularJump(mm);
@@ -189,6 +231,7 @@ public class MoveManager : MonoBehaviour
             {
                 // TODO: implement special jump for holding onto the wall
             }
+            return true;
         }
     }
 
@@ -208,16 +251,17 @@ public class MoveManager : MonoBehaviour
             groundedJump = gj;
         }
 
-        public override void jump(MoveManager mm)
+        public override bool jump(MoveManager mm)
         {
             if (!mm.grounded && !mm.doubleJumped)
             {
                 regularJump(mm);
                 mm.doubleJumped = true;
+                return true;
             }
             else
             {
-                groundedJump.jump(mm);
+                return groundedJump.jump(mm);
             }
         }
     }
@@ -286,7 +330,7 @@ public class MoveManager : MonoBehaviour
         }
 
         // dodge in the given direction if appropriate
-        public abstract void dodge(MoveManager mm, Direction dir);
+        public abstract bool dodge(MoveManager mm, Direction dir);
 
         // dodge in the given direction
         protected void alwaysDodge(MoveManager mm, Direction dir)
@@ -333,12 +377,14 @@ public class MoveManager : MonoBehaviour
 
     class GroundDodge : Dodge
     {
-        public override void dodge(MoveManager mm, Direction dir)
+        public override bool dodge(MoveManager mm, Direction dir)
         {
             if (mm.grounded && !mm.dodging && dir != Direction.NONE)
             {
                 alwaysDodge(mm, dir);
+                return true;
             }
+            else { return false; }
         }
     }
 }
