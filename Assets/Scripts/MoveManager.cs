@@ -10,6 +10,7 @@ public class MoveManager : MonoBehaviour
     // constants
     int queueLength = 10; // TODO: find a more elegant solution than having a bunch of repeated code?
     // TODO: change the queue length based on the framerate. Or just use delta time lol
+    int coyoteTime = 3;
 
     // player movement state
     bool jumping; // is the player y-velocity positive after a jump
@@ -18,6 +19,7 @@ public class MoveManager : MonoBehaviour
     bool doubleJumped;
     bool falling;
     bool grounded;
+    int extraGroundedTime;
     Direction horzDir = Direction.LEFT;
     bool dodging;
     int dodgeRemaining;
@@ -142,6 +144,9 @@ public class MoveManager : MonoBehaviour
                 // don't need this as long as walk gets called at every update
             }
         }
+
+        //decrease coyote time
+        extraGroundedTime = Mathf.Max(extraGroundedTime - 1, 0);
     }
 
     void OnTriggerEnter2D(Collider2D other)
@@ -159,6 +164,7 @@ public class MoveManager : MonoBehaviour
             if (!pc.groudDetector.IsTouchingLayers(groundLayer))
             {
                 grounded = false;
+                extraGroundedTime = coyoteTime;
             }
             if (!pc.wallDetector.IsTouchingLayers(groundLayer))
             {
@@ -176,6 +182,12 @@ public class MoveManager : MonoBehaviour
     {
         dodgeQueue = 0;
         jumpQueue = 0;
+    }
+
+    // returns true if the player is attached to the ground - holding a wall, standing, in coyote time
+    bool groundedCheck()
+    {
+        return grounded || extraGroundedTime > 0 || frontTouchingWall;
     }
 
     abstract class Jump
@@ -222,14 +234,14 @@ public class MoveManager : MonoBehaviour
     {
         public override bool jump(MoveManager mm)
         {
-            if (mm.dodging || !mm.grounded) { return false; }
-            if (mm.grounded)
-            {
-                regularJump(mm);
-            }
-            else if (mm.holdingWall)
+            if (mm.dodging || !mm.groundedCheck()) { return false; }
+            if (mm.holdingWall)
             {
                 // TODO: implement special jump for holding onto the wall
+            }
+            else if (mm.grounded || mm.extraGroundedTime > 0)
+            {
+                regularJump(mm);
             }
             return true;
         }
@@ -253,7 +265,7 @@ public class MoveManager : MonoBehaviour
 
         public override bool jump(MoveManager mm)
         {
-            if (!mm.grounded && !mm.doubleJumped)
+            if (!mm.groundedCheck() && !mm.doubleJumped)
             {
                 regularJump(mm);
                 mm.doubleJumped = true;
@@ -379,7 +391,7 @@ public class MoveManager : MonoBehaviour
     {
         public override bool dodge(MoveManager mm, Direction dir)
         {
-            if (mm.grounded && !mm.dodging && dir != Direction.NONE)
+            if (mm.groundedCheck() && !mm.dodging && dir != Direction.NONE)
             {
                 alwaysDodge(mm, dir);
                 return true;
