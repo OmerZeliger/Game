@@ -14,6 +14,6 @@ public class CaterpillarMotionTest : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        rb.velocity = new Vector2(-0.6f, 0);
+        rb.velocity = new Vector2(-0.55f, 0);
     }
 }
