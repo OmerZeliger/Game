@@ -8,6 +8,7 @@ TagManager:
   - Ball
   - Enemy
   - SplashDamage
+  - Interactable
   layers:
   - Default
   - TransparentFX

@@ -13,6 +13,7 @@ public class PlayerController : MonoBehaviour
     public GameObject respawn;
 
     private Game inputs;
+    private Interactor interactibleInRange;
 
     // flip the character horizontally
     public void flip(Direction direction)
@@ -76,6 +77,14 @@ public class PlayerController : MonoBehaviour
             mm.dodge(dir);
         }
 
+        if (inputs.Player.Interact.triggered)
+        {
+            if (interactibleInRange != null)
+            {
+                interactibleInRange.interact();
+            }
+        }
+
         if (true) //(inputs.Player.Move.phase != InputActionPhase.Waiting || inputs.Player.Move.triggered)
             // TODO: for some reason the player's rounded box collider will slide backwards slowly after contacting a wall
             // leave it this way until I figure out why and how to stop it lol
@@ -90,8 +99,6 @@ public class PlayerController : MonoBehaviour
             mm.walk(dir);
         }
 
-
-
         // update the game state
     }
 
@@ -99,6 +106,20 @@ public class PlayerController : MonoBehaviour
     {
         // TODO: based on the tag, test which trigger was hit. For example, if the tag is "wall", test wallDetector
         Debug.Log("Hit " + collision.tag);
+
+        if (collision.CompareTag("Interactable"))
+        {
+            interactibleInRange = collision.gameObject.GetComponent<Interactor>();
+        }
+    }
+
+    void OnTriggerExit2D(Collider2D collision)
+    {
+        // TODO: based on the tag, test which trigger was hit. For example, if the tag is "wall", test wallDetector
+        if (collision.CompareTag("Interactable"))
+        {
+            interactibleInRange = null;
+        }
     }
 
     // called at a specific rate. Use this to jump instead of gravity?
