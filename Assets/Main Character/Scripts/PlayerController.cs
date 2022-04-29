@@ -6,6 +6,7 @@ using UnityEngine.InputSystem;
 public class PlayerController : MonoBehaviour
 {
     public Rigidbody2D rb;
+    public BoxCollider2D hitbox;
     public BoxCollider2D wallDetector;
     public BoxCollider2D groudDetector;
     public SpriteRenderer sr;
@@ -81,7 +82,7 @@ public class PlayerController : MonoBehaviour
         {
             if (interactibleInRange != null)
             {
-                interactibleInRange.interact();
+                interactibleInRange.interact(this);
             }
         }
 
@@ -105,11 +106,26 @@ public class PlayerController : MonoBehaviour
     void OnTriggerEnter2D(Collider2D collision)
     {
         // TODO: based on the tag, test which trigger was hit. For example, if the tag is "wall", test wallDetector
-        Debug.Log("Hit " + collision.tag);
+        //Debug.Log("Hit " + collision.tag);
 
         if (collision.CompareTag("Interactable"))
         {
             interactibleInRange = collision.gameObject.GetComponent<Interactor>();
+        } else if (collision.CompareTag("Enemy"))
+        {
+            EnemyController enemy = collision.gameObject.GetComponent<EnemyController>();
+            if (mm.getHit(enemy))
+            {
+                //TODO: reduce health
+            }
+        }
+    }
+
+    private void OnTriggerStay2D(Collider2D collision)
+    {
+        if (collision.CompareTag("Enemy"))
+        {
+            OnTriggerEnter2D(collision);
         }
     }
 

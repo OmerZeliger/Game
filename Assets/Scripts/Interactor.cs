@@ -1,5 +1,5 @@
 ﻿using System;
 public interface Interactor
 {
-    public void interact();
+    public void interact(PlayerController player);
 }

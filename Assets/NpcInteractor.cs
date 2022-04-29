@@ -13,10 +13,11 @@ public class NpcInteractor : MonoBehaviour, Interactor
     // Update is called once per frame
     void Update()
     {
-        
+
     }
 
-    public void interact()
+
+    public void interact(PlayerController player)
     {
         Debug.Log("Interacted with the pink circle");
     }

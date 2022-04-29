@@ -52,7 +52,10 @@ public class BallController : MonoBehaviour
     {
         if (inputs.Player.Attack.triggered)
         {
-            attack();
+            if (mm.attack())
+            {
+                attack();
+            }
         }
 
 
@@ -63,7 +66,7 @@ public class BallController : MonoBehaviour
         if (attacking)
         {
             attackRemaining -= 1;
-            transform.localPosition = steadyLoc;
+            transform.position = steadyLoc;
             if (attackRemaining <= 0) {
                 attacking = false;
                 splashDamage.deactivate();
@@ -109,7 +112,7 @@ public class BallController : MonoBehaviour
 
         //transform.localPosition = attackLoc;
         jumpTo(attackLoc, Vector2.zero);
-        steadyLoc = attackLoc;
+        steadyLoc = rb.transform.position; // set steadyLoc to attackLoc's global position
         attacking = true;
         attackRemaining = attackLength;
 
@@ -117,7 +120,7 @@ public class BallController : MonoBehaviour
     }
 
     // move the ball to the new position and give it a pretty trail
-    // both given locations should be in local coordinates
+    // both given locations should be in local coordinates (relative to player)
     private void jumpTo(Vector2 newPosition, Vector2 approachDirection)
     {
         tr.AddPositions(bezier.trail(transform.position,

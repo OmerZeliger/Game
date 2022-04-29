@@ -7,9 +7,9 @@ public class Utils
     {
         switch (dir)
         {
-            case -1 : return Direction.LEFT;
-            case 0 : return Direction.NONE;
-            case 1 : return Direction.RIGHT;
+            case -1: return Direction.LEFT;
+            case 0: return Direction.NONE;
+            case 1: return Direction.RIGHT;
         }
 
         throw new ArgumentException("Bad input lol");
@@ -19,9 +19,9 @@ public class Utils
     {
         switch (dir)
         {
-            case -1 : return Direction.DOWN;
-            case 0 : return Direction.NONE;
-            case 1 : return Direction.UP;
+            case -1: return Direction.DOWN;
+            case 0: return Direction.NONE;
+            case 1: return Direction.UP;
         }
 
         throw new ArgumentException("Bad input lol");
@@ -31,7 +31,7 @@ public class Utils
     {
         switch (dir)
         {
-            case Direction.LEFT : return new Vector2(-1, 0);
+            case Direction.LEFT: return new Vector2(-1, 0);
             case Direction.RIGHT: return new Vector2(1, 0);
             case Direction.DOWN: return new Vector2(0, -1);
             case Direction.UP: return new Vector2(0, 1);
@@ -40,6 +40,7 @@ public class Utils
         return new Vector2(0, 0);
     }
 
+    // subtract the second vector from the first
     public static Vector2 subtract(Vector2 first, Vector2 second)
     {
         return new Vector2(first.x - second.x, first.y - second.y);

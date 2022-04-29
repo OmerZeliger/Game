@@ -2,10 +2,20 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class FlappyEnemyController : MonoBehaviour
+public class FlappyEnemyController : MonoBehaviour, EnemyController
 {
     public Rigidbody2D rb;
     public GameObject player;
+
+    public Vector2 position()
+    {
+        return rb.transform.position;
+    }
+
+    public float knockbackSpeed()
+    {
+        return 10;
+    }
 
     // Start is called before the first frame update
     void Start()

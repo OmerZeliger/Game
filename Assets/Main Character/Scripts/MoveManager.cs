@@ -25,6 +25,12 @@ public class MoveManager : MonoBehaviour
     int dodgeRemaining;
     bool airDodged;
     Vector2 steadyVel; // any velocity that the game needs to maintain for a period of time
+    bool invincible { get { return invincibilityRemaining > 0; } }
+    int defaultInvincibility = 20;
+    int invincibilityRemaining;
+    bool stunned { get { return stunRemaining > 0; } }
+    int stunRemaining;
+    int defaultStun = 8;
     //float gravity = -0.5;
 
     // queue
@@ -68,6 +74,44 @@ public class MoveManager : MonoBehaviour
             dodgeQueue = queueLength;
             dodgeQueueDirection = dir;
         }
+    }
+
+    public bool getHit(EnemyController enemy)
+    {
+        if (!invincible)
+        {
+            // reset all queues
+            jumpQueue = 0;
+            dodgeQueue = 0;
+            // stop all motion
+            jumping = false;
+            holdingWall = false;
+            dodging = false;
+            dodgeRemaining = 0; //TODO: start dodge recovery timer
+            airDodged = false;
+            doubleJumped = false; //TODO: keep this? it'll let you recover double jump after getting hit mid-air
+
+            // stun the player
+            stunRemaining = defaultStun;
+
+            // knock the player away from the enemy
+            Vector2 knockback = Utils.scale(Utils.subtract(rb.transform.position, enemy.position()).normalized,
+                enemy.knockbackSpeed());
+            if (grounded)
+            {
+                //TODO: not very elegant. what effect do I want?
+                knockback = new Vector2(knockback.x, Mathf.Max(knockback.y, 3));
+            }
+            rb.velocity = knockback;
+            Debug.Log(knockback);
+            invincibilityRemaining = defaultInvincibility; // give the player some invincibility frames
+            return true; // return true if the player was successfully hit
+        } else { return false; }
+    }
+
+    public bool attack()
+    {
+        return !stunned;
     }
 
     void Awake()
@@ -142,11 +186,34 @@ public class MoveManager : MonoBehaviour
                 dodging = false;
                 //rb.velocity = new Vector2(0, 0);
                 // don't need this as long as walk gets called at every update
+                //TODO: start dodge recovery timer
             }
         }
 
-        //decrease coyote time
+        // decrease coyote time
         extraGroundedTime = Mathf.Max(extraGroundedTime - 1, 0);
+
+        // decrease invinciblity time
+        if (invincible)
+        {
+            invincibilityRemaining -= 1;
+            if (!invincible)
+            {
+                //pc.recollide(); // treat any collisions coming out of invincibility as new (intended for enemies)
+                // moved this to OnTriggerStay instead
+            }
+        }
+
+        // decrease stun time
+        if (stunned)
+        {
+            stunRemaining -= 1;
+            if (!stunned)
+            {
+                // invincibility should last longer than stun anyway so this hopefully shouldn't matter
+                //pc.recollide(); // treat any collisions coming out of stun as new (intended for enemies)
+            }
+        }
     }
 
     void OnTriggerEnter2D(Collider2D other)
@@ -287,6 +354,7 @@ public class MoveManager : MonoBehaviour
 
         protected void alwaysWalk(MoveManager mm, Direction dir)
         {
+            if (mm.stunned) { return; }
             int d = 0;
             switch (dir)
             {
