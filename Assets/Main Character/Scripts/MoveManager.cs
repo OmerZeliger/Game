@@ -28,7 +28,7 @@ public class MoveManager : MonoBehaviour
     bool invincible { get { return invincibilityRemaining > 0; } }
     int defaultInvincibility = 20;
     int invincibilityRemaining;
-    bool stunned { get { return stunRemaining > 0; } }
+    public bool stunned { get { return stunRemaining > 0; } }
     int stunRemaining;
     int defaultStun = 8;
     //float gravity = -0.5;
@@ -59,6 +59,7 @@ public class MoveManager : MonoBehaviour
 
     public void stopJump()
     {
+        jumpQueue = 0;
         jumper.stopJump(this);
     }
 
@@ -119,7 +120,7 @@ public class MoveManager : MonoBehaviour
         groundLayer = LayerMask.GetMask("Ground");
         jumper = new BasicJump();
         walker = new BasicWalk();
-        dodger = new GroundDodge();
+        dodger = new AirDodge();
     }
 
     // Start is called before the first frame update
@@ -349,7 +350,7 @@ public class MoveManager : MonoBehaviour
     {
         protected virtual float walkSpeed
         {
-            get { return 7; }
+            get { return 5; }
         }
 
         protected void alwaysWalk(MoveManager mm, Direction dir)
@@ -465,6 +466,37 @@ public class MoveManager : MonoBehaviour
                 return true;
             }
             else { return false; }
+        }
+    }
+
+    class AirDodge : Dodge
+    {
+        Dodge groundedDodge;
+        // TODO: return a bool for queueing purposes
+
+        public AirDodge()
+        {
+            groundedDodge = new GroundDodge();
+            // TODO: why can't I call the other constructor without groundedJump being null?
+        }
+
+        public AirDodge(Dodge gd)
+        {
+            groundedDodge = gd;
+        }
+
+        public override bool dodge(MoveManager mm, Direction dir)
+        {
+            if (!mm.groundedCheck() && !mm.airDodged && !mm.dodging && dir != Direction.NONE)
+            {
+                alwaysDodge(mm, dir);
+                mm.airDodged = true;
+                return true;
+            }
+            else
+            {
+                return groundedDodge.dodge(mm, dir);
+            }
         }
     }
 }
